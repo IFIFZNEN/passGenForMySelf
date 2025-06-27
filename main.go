@@ -2,11 +2,20 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/fatih/color"
 
 	"passGenForMySelf/account"
 	"passGenForMySelf/files"
 	"passGenForMySelf/output"
 )
+
+var menu = map[string]func(db *account.VaultWithDb){
+	"1": createAccount,
+	"2": findAccount,
+	"3": deleteAccount,
+}
 
 func main() {
 	fmt.Println("Программа для создания учётных записей для разных сайтов")
@@ -20,16 +29,23 @@ Menu:
 			"Введите: число 4 или 0 (или любое иное число для выхода из приложения)",
 			"Введите команду",
 		})
-		switch variant {
-		case "1":
-			createAccount(vault)
-		case "2":
-			findAccount(vault)
-		case "3":
-			deleteAccount(vault)
-		default:
+		menuFunc := menu[variant]
+		if menuFunc == nil {
+			color.Red("Вы ввели неверную команду")
 			break Menu
 		}
+		menuFunc(vault)
+
+		//
+		//switch variant {
+		//case "1":
+		//	createAccount(vault)
+		//case "2":
+		//	findAccount(vault)
+		//case "3":
+		//	deleteAccount(vault)
+		//default:
+		//	break Menu
 	}
 }
 
@@ -49,13 +65,17 @@ func createAccount(vault *account.VaultWithDb) {
 
 func findAccount(vault *account.VaultWithDb) {
 	url := promtData([]string{"Ввести URL для поиска"})
-	accounts := vault.FindAccountByUrl(url)
+	accounts := vault.FindAccounts(url, chekUrl)
 	if len(accounts) == 0 {
 		output.PrintError("Аккаунтов не найдено")
 	}
 	for _, account := range accounts {
 		account.Output()
 	}
+}
+
+func chekUrl(acc account.Account, str string) bool {
+	return strings.Contains(acc.Url, str)
 }
 
 func deleteAccount(vault *account.VaultWithDb) {
