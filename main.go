@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 
 	"passGenForMySelf/account"
+	"passGenForMySelf/encrypter"
 	"passGenForMySelf/files"
 	"passGenForMySelf/output"
 )
@@ -37,7 +39,11 @@ func menuCounter() func() {
 
 func main() {
 	fmt.Println("Программа для создания учётных записей для разных сайтов")
-	vault := account.NewVault(files.NewJsonDB("data.json"))
+	err := godotenv.Load()
+	if err != nil {
+		output.PrintError("Не удалось найти .env файл")
+	}
+	vault := account.NewVault(files.NewJsonDB("data.vault"), *encrypter.NewEncrypter())
 	counter := menuCounter()
 Menu:
 	for {
